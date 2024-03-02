@@ -1,48 +1,185 @@
-<!DOCTYPE HTML>
-<html lang="en">
-<head>
-  <meta name="ahk:equiv-v2" content="index.htm" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <title>Welcome to AutoHotkey</title>
-  <meta name="robots" content="noindex, nofollow" />
-  <link href="static/theme.css" rel="stylesheet" type="text/css" />
-  <style>
-  h1, h2 {
-    border: none;
-  }
-  h1 {
-    font-size: 300%;
-    font-weight: normal;
-  }
-  .emlink {
-    font-weight: bold;
-  }
-  #container {
-    padding: 10% 20%;
-  }
-  </style>
-  <script src="static/content.js" type="text/javascript"></script>
-</head>
-<body>
+Menu, Tray, NoDefault
+Menu, Tray, NoStandard
+Menu, Tray, Tip, ^-^
+Menu, Tray, add, [F3] 창 열기, TrayA
+Menu, Tray, add, [F4] 종료, TrayB
 
-<a id="ahklogo"><img src="static/ahk_logo.svg" onerror="this.src='static/ahk_logo.png'; this.onerror=null;" alt="AutoHotkey"></a>
+if not A_IsAdmin
+{
+	MsgBox, 16, 오류, 관리자 권한으로 실행해주세요.
+	ExitApp
+}
 
-<div id="container">
-  <h1 id="welcome">Welcome...</h1>
-  
-  <h2 id="Getting_Started">Getting Started</h2>
-  <p>Before AutoHotkey can do anything, you need to write a script telling it what to do.<br>
-  To learn how, read <a class="emlink" href="Tutorial.htm">the tutorial</a> or <a href="Scripts.htm">dive straight in</a>.</p>
-  <p>Basically: <a href="Tutorial.htm#s12">create a script file</a> &rarr; <a href="Tutorial.htm#s2">add some hotkeys</a> &rarr; run the script file.</p>
-  <p>You can also get help or find many useful scripts on <a href="https://www.autohotkey.com/boards/">our friendly discussion forum</a>.</p>
-  
-  <h2 id="Why_am_I_seeing_this" style="margin-top: 1.5em">Why am I seeing this?</h2>
-  <div id="why">
-  <p>You ran AutoHotkey without <a href="Scripts.htm#cmd">telling it</a> which script file to run, and it couldn't find a script in either of <a href="Scripts.htm#defaultfile">the usual places</a>.</p>
-  </div>
-  
-</div>
+ifNotExist, SaveF.ini
+{
+	MsgBox, , ^-^, 핫키 적용 + 사용할 플라스크 체크 후 사용
+	MsgBox, , ^-^, PoE 창 활성화 중에만 작동됨
+	MsgBox, , ^-^, F2 : 핫키 온오프 토글 / F3 : 트레이로 최소화 / F4 : 종료
+	IniWrite, 0, SaveF.ini, Save, SFlask1
+	IniWrite, 0, SaveF.ini, Save, SFlask2
+	IniWrite, 0, SaveF.ini, Save, SFlask3
+	IniWrite, 0, SaveF.ini, Save, SFlask4
+	IniWrite, 0, SaveF.ini, Save, SFlask5
+}
 
-</body>
-</html>
+ON = 0
+GUI = 1
+
+Gui Add, CheckBox, x11 y46 w27 h23 vFlask1, UP ARROW
+Gui Add, CheckBox, x48 y46 w27 h23 vFlask2, RIGHT ARROW
+Gui Add, CheckBox, x85 y46 w27 h23 vFlask3, CTRL
+Gui Add, CheckBox, x122 y46 w27 h23 vFlask4, SHIFT
+Gui Add, CheckBox, x159 y46 w27 h23 vFlask5, 5
+Gui Add, Text, x15 y14 w27 h23 +0x200, 키
+Gui Add, Hotkey, x41 y16 w35 h19 vHK
+Gui Add, Button, x79 y14 w45 h23 vActivate gActivate, 적용
+Gui Add, Button, x138 y11 w45 h29 vSave gSave, 저장
+Gui Show, w194 h77, ^-^
+
+IniRead,	SHK, SaveF.ini, Save, SHK
+IniRead,	SFlask1, SaveF.ini, Save, SFlask1
+IniRead,	SFlask2, SaveF.ini, Save, SFlask2
+IniRead,	SFlask3, SaveF.ini, Save, SFlask3
+IniRead,	SFlask4, SaveF.ini, Save, SFlask4
+IniRead,	SFlask5, SaveF.ini, Save, SFlask5
+GuiControl, , HK, %SHK%
+GuiControl, ,Flask1, %SFlask1%
+GuiControl, ,Flask2, %SFlask2%
+GuiControl, ,Flask3, %SFlask3%
+GuiControl, ,Flask4, %SFlask4%
+GuiControl, ,Flask5, %SFlask5%
+Return
+
+GuiEscape:
+GuiClose:
+		ExitApp
+
+UseFlask()
+{
+	FN = 1
+	Loop, 5
+	{
+		If ( Flask%FN% = 1 )
+		{
+			Global HK
+			Hotkey, *%HK%, HK, Off
+			Send, {%FN%}
+			Random, x, 1, 4
+			Sleep, %x%
+			Hotkey, *%HK%, HK, On
+		}
+		FN := FN + 1 
+	}
+}
+
+
+TrayA:
+Gui, Submit, Nohide
+GUI = 1
+Gui, Show
+Return
+
+
+TrayB:
+TrayTip, ^-^, ㅂㅇ
+ExitApp
+Return
+
+
+HK:
+Gui, Submit, Nohide
+If ( ON = 1 )
+{
+	IfWinNotActive, Path of Exile
+	{
+		Hotkey, *%HK%, HK, off
+		Send, %HK%
+		Hotkey, *%HK%, HK, on
+		Return
+	}
+	IfWinActive, Path of Exile
+	{
+		UseFlask()
+		Sleep, 150
+	}
+}
+Return
+
+
+Activate:
+Gui, Submit, Nohide
+If ( ON = 0 )
+{
+	If ( HK = "F2" OR HK ="F3" )
+	{
+		MsgBox, 16, 오류, F2/F3은 핫키로 지정하실 수 없습니다.
+		Return
+	}
+	If ( HK = "" )
+	{
+		MsgBox, 16, 오류, 핫키를 지정해 주세요.
+		Return
+	}
+	GuiControl, Disabled, HK
+	GuiControl, , Activate, 해제
+	Hotkey, *%HK%, HK, On
+	ON = 1
+	SoundBeep, 1000, 50
+	Sleep, 49
+	SoundBeep, 2000, 100
+}
+Else
+{
+	GuiControl, Enabled, HK
+	GuiControl, , Activate, 적용
+	Hotkey, *%HK%, HK, Off
+	ON = 0
+	SoundBeep, 2000, 50
+	Sleep, 49
+	SoundBeep, 1000, 100
+}
+Return
+
+
+Save:
+Gui, submit, nohide
+If ( HK = "" )
+{
+	MsgBox, 16, 오류, 핫키를 지정해 주세요.
+	Return
+}
+IniWrite, %HK%, SaveF.ini, Save, SHK
+IniWrite, %Flask1%, SaveF.ini, Save, SFlask1
+IniWrite, %Flask2%, SaveF.ini, Save, SFlask2
+IniWrite, %Flask3%, SaveF.ini, Save, SFlask3
+IniWrite, %Flask4%, SaveF.ini, Save, SFlask4
+IniWrite, %Flask5%, SaveF.ini, Save, SFlask5
+TrayTip, ^-^, 저장 완료
+Return
+
+
+F2::
+HotKey, F2, Off
+Send, {F2}
+HotKey, F2, On
+Goto, Activate
+Return
+
+
+F3::
+If ( GUI = 1 )
+{
+	Gui, Hide
+	GUI = 0
+}
+Else
+{
+	Gui, Show
+	GUI = 1
+}
+Return
+
+
+F4::
+TrayTip, ^-^, ㅂㅇ
+ExitApp
